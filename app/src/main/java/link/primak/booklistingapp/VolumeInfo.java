@@ -22,6 +22,11 @@ public class VolumeInfo {
     private String author;
     private String title;
 
+    public VolumeInfo(String author, String title) {
+        this.author = author;
+        this.title = title;
+    }
+
     public String getAuthor() {
         return author;
     }
@@ -36,5 +41,13 @@ public class VolumeInfo {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Override
+    public String toString() {
+        return "VolumeInfo{" +
+                "author='" + author + '\'' +
+                ", title='" + title + '\'' +
+                '}';
     }
 }

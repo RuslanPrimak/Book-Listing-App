@@ -35,7 +35,8 @@
             android:layout_marginRight="16dp"
             android:layout_toLeftOf="@+id/search_button"
             android:layout_toStartOf="@+id/search_button"
-            android:inputType="text" />
+            android:inputType="text"
+            android:text="android"/>
 
         <Button
             android:id="@+id/search_button"
@@ -54,12 +55,20 @@
             android:layout_below="@+id/search_button"
             android:layout_marginTop="16dp">
 
+            <ListView
+                android:id="@+id/list_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+            </ListView>
+
             <TextView
                 android:id="@+id/text_search_result"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
+                android:text="@string/search_empty"
                 android:visibility="gone" />
 
             <android.support.v4.widget.ContentLoadingProgressBar

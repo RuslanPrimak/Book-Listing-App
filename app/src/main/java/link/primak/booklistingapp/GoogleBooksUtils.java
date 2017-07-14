@@ -20,7 +20,12 @@ package link.primak.booklistingapp;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,6 +35,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 
@@ -104,5 +112,56 @@ class GoogleBooksUtils {
                 return output.toString();
             }
         };
+    }
+
+    static InputStreamProcessor<List<VolumeInfo>> getInputStreamVolumeListProcessor() {
+        return new InputStreamProcessor<List<VolumeInfo>>() {
+            @Override
+            public List<VolumeInfo> processStream(InputStream stream) throws IOException {
+                StringBuilder output = new StringBuilder();
+                if (stream != null) {
+                    InputStreamReader inputStreamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
+                    BufferedReader reader = new BufferedReader(inputStreamReader);
+                    String line = reader.readLine();
+                    while (line != null) {
+                        output.append(line);
+                        line = reader.readLine();
+                    }
+                }
+                return parseJsonVolumes(output.toString());
+            }
+        };
+    }
+
+    static List<VolumeInfo> parseJsonVolumes(String jsonString) {
+        List<VolumeInfo> list = new ArrayList<>();
+        if (!TextUtils.isEmpty(jsonString)) {
+            try {
+                JSONObject root = new JSONObject(jsonString);
+                JSONArray items = root.getJSONArray("items");
+                for (int i = 0; i < items.length(); i++) {
+                    JSONObject volumeInfo = items.getJSONObject(i).getJSONObject("volumeInfo");
+
+                    // Authors could not exists, show publisher instead
+                    StringBuilder authorBuider = new StringBuilder();
+                    if (volumeInfo.has("authors")) {
+                        JSONArray authors = volumeInfo.getJSONArray("authors");
+                        if (authors.length() > 0) {
+                            authorBuider.append(authors.getString(0));
+                        }
+
+                        for (int j = 1; j < authors.length(); j++) {
+                            authorBuider.append(", ").append(authors.getString(j));
+                        }
+                    } else if (volumeInfo.has("publisher")) {
+                        authorBuider.append(volumeInfo.getString("publisher"));
+                    }
+                    list.add(new VolumeInfo(authorBuider.toString(), volumeInfo.getString("title")));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
     }
 }

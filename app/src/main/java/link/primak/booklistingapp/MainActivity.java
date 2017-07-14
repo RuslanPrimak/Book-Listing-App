@@ -5,24 +5,17 @@ import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
+import java.util.List;
 
 import link.primak.booklistingapp.databinding.ActivityMainBinding;
-
-import static android.R.attr.button;
-import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
-import static link.primak.booklistingapp.GoogleBooksUtils.getInputStreamStringProcessor;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -104,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private ActivityMainBinding mBinding;
+    private VolumesAdapter mAdapter;
     private static final String TAG = "MainActivity";
 
     /**
@@ -114,6 +108,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        mBinding.listView.setEmptyView(mBinding.textSearchResult);
+        mAdapter = new VolumesAdapter(this);
+        mBinding.listView.setAdapter(mAdapter);
+        onSearchButtonClick(mBinding.searchButton);
     }
 
     public void onSearchButtonClick(View view) {
@@ -129,26 +127,36 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class VolumesAsyncTask extends AsyncTask<String, Void, String> {
+    private class VolumesAsyncTask extends AsyncTask<String, Void, List<VolumeInfo>> {
 
         @Override
-        protected String doInBackground(String... query) {
+        protected List<VolumeInfo> doInBackground(String... query) {
             if ((query != null) && (query.length > 0)) {
                 try {
                     return GoogleBooksUtils.processHttpRequest(GoogleBooksUtils.createUrl(query[0]),
-                            GoogleBooksUtils.getInputStreamStringProcessor());
+                            GoogleBooksUtils.getInputStreamVolumeListProcessor());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
 
-            return "";
+            return null;
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(List<VolumeInfo> list) {
             setProgressLoading(false);
-            mBinding.textSearchResult.setText(s);
+            mAdapter.clear();
+            if (list != null) {
+                if (list.size() == 0) {
+                    mBinding.textSearchResult.setText(R.string.search_empty);
+                } else {
+                    mAdapter.addAll(list);
+                }
+            } else {
+                mBinding.textSearchResult.setText(getString(R.string.search_error));
+            }
+            mAdapter.notifyDataSetChanged();
         }
     }
 
