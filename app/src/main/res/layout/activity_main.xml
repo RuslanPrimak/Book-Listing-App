@@ -24,43 +24,60 @@
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <EditText
-            android:id="@+id/edit_query"
+        <LinearLayout
+            android:id="@+id/search_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_toLeftOf="@+id/search_button"
-            android:layout_toStartOf="@+id/search_button"
-            android:inputType="text"
-            android:text="android"/>
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/search_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:onClick="onSearchButtonClick"
-            android:text="@string/search_button" />
+            <LinearLayout
+                android:id="@+id/focus_gainer"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:orientation="horizontal"
+                android:layout_width="0px"
+                android:layout_height="0px"/>
 
+            <EditText
+                android:id="@+id/edit_query"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:nextFocusUp="@id/edit_query"
+                android:nextFocusLeft="@id/edit_query"
+                android:text="android" />
+
+            <android.support.v4.widget.ContentLoadingProgressBar
+                android:id="@+id/progress_search"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="-24dp"
+                android:layout_marginStart="-24dp"
+                android:visibility="invisible" />
+
+            <Button
+                android:id="@+id/search_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
+                android:onClick="onSearchButtonClick"
+                android:text="@string/search_button" />
+
+        </LinearLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/search_button"
+            android:layout_below="@+id/search_layout"
             android:layout_marginTop="16dp">
 
             <ListView
                 android:id="@+id/list_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-            </ListView>
+                android:layout_height="match_parent" />
 
             <TextView
                 android:id="@+id/text_search_result"
@@ -69,15 +86,6 @@
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
                 android:text="@string/search_empty"
-                android:visibility="gone" />
-
-            <android.support.v4.widget.ContentLoadingProgressBar
-                android:id="@+id/progress_search"
-                style="?android:attr/progressBarStyleLarge"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
         </RelativeLayout>

@@ -21,10 +21,12 @@ package link.primak.booklistingapp;
 public class VolumeInfo {
     private String author;
     private String title;
+    private String link;
 
-    public VolumeInfo(String author, String title) {
+    public VolumeInfo(String author, String title, String link) {
         this.author = author;
         this.title = title;
+        this.link = link;
     }
 
     public String getAuthor() {
@@ -43,11 +45,20 @@ public class VolumeInfo {
         this.title = title;
     }
 
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
     @Override
     public String toString() {
         return "VolumeInfo{" +
                 "author='" + author + '\'' +
                 ", title='" + title + '\'' +
+                ", link='" + link + '\'' +
                 '}';
     }
 }

@@ -1,15 +1,22 @@
 package link.primak.booklistingapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -17,7 +24,7 @@ import java.util.List;
 
 import link.primak.booklistingapp.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<VolumeInfo>> {
 
     //https://developers.google.com/books/docs/v1/getting_started#intro
 
@@ -33,25 +40,6 @@ public class MainActivity extends AppCompatActivity {
 
     // TODO: 13-Jul-17 Book Listing project rubric: https://review.udacity.com/#!/rubrics/164/view
 
-    /** TODO: 13-Jul-17 Once you've explored the API, begin work in Android Studio.
-     * You'll want a simple layout initially, with an editable TextView and a 'search' button.
-     * Then, you'll want to build the AsyncTask that queries the API.
-     * This is a complex step, so be sure to reference the course materials when needed.
-     * Once you've queried the API, you'll need to parse the result.
-     * This will involve storing the information returned by the API in a custom class.
-     * Finally, you'll use the List and Adapter pattern to populate a list on the user's screen
-     * with the information stored in the custom objects you wrote earlier.
-     */
-
-    // TODO: 13-Jul-17 Overall Layout: App contains a ListView which becomes populated with list items.
-
-    // List Item Layout: List Items display at least author and title information.
-
-    /** TODO: 13-Jul-17 Layout Best Practices: The code adheres to all of the following best practices:
-     *  Text sizes are defined in sp; Lengths are defined in dp; Padding and margin is used appropriately,
-     *  such that the views are not crammed up against each other.
-     */
-
     // TODO: 13-Jul-17 Text Wrapping: Information displayed on list items is not crowded.
     /** TODO: 13-Jul-17 Rotation: Upon device rotation - The layout remains scrollable.;
      *  The app should save state and restore the list back to the previously scrolled position.;
@@ -62,17 +50,6 @@ public class MainActivity extends AppCompatActivity {
     /** TODO: 13-Jul-17 API Call: The user can enter a word or phrase to serve as a search query.
      *  The app fetches book data related to the query via an HTTP request from the Google Books API,
      *  using a class such as HttpUriRequest or HttpURLConnection.
-     */
-
-    /** TODO: 13-Jul-17 Response Validation: The app checks whether the device is connected to the
-     *  internet and responds appropriately. The result of the request is validated to account for
-     *  a bad server response or lack of server response.
-     */
-
-    // TODO: 13-Jul-17 Async Task: The network call occurs off the UI thread using an AsyncTask or similar threading object.
-
-    /** TODO: 13-Jul-17 No Data Message: When there is no data to display,
-     *  the app shows a default TextView that informs the user how to populate the list.
      */
 
     /** TODO: 14-Jul-17
@@ -95,10 +72,20 @@ public class MainActivity extends AppCompatActivity {
      * can currently only be done through the Google Books site.
      */
 
+    /*
+     TODO: 18-Jul-17 доработать поиск рускоязычных слов
+     */
+
+    /*
+     TODO: 18-Jul-17 доработать загрузку картинок
+     */
+
 
     private ActivityMainBinding mBinding;
     private VolumesAdapter mAdapter;
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivityTag";
+    private static final int VOLUME_ASYNC_LOADER = 0;
+    private static final String ARG_BUNDLE_SEARCH = "ARG_BUNDLE_SEARCH";
 
     /**
      *
@@ -107,66 +94,104 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mBinding.listView.setEmptyView(mBinding.textSearchResult);
         mAdapter = new VolumesAdapter(this);
         mBinding.listView.setAdapter(mAdapter);
-        onSearchButtonClick(mBinding.searchButton);
+        mBinding.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                // Find the current earthquake that was clicked on
+                VolumeInfo volume = mAdapter.getItem(position);
+
+                // Convert the String URL into a URI object (to pass into the Intent constructor)
+                Uri uri = Uri.parse(volume.getLink());
+
+                // Create a new intent to view the earthquake URI
+                Intent websiteIntent = new Intent(Intent.ACTION_VIEW, uri);
+
+                // Send the intent to launch a new activity
+                startActivity(websiteIntent);
+            }
+        });
+
+        hideKeyboard();
+        if (checkConnectivity()) {
+            Log.d(TAG, "initLoader(null)");
+            getSupportLoaderManager().initLoader(VOLUME_ASYNC_LOADER, null, this);
+        }
     }
 
     public void onSearchButtonClick(View view) {
-        if (TextUtils.isEmpty(mBinding.editQuery.getText())) {
+        hideKeyboard();
+        Log.d(TAG, "onSearchButtonClick");
+        String searchPhrase = mBinding.editQuery.getText().toString();
+        if (TextUtils.isEmpty(searchPhrase)) {
             Toast.makeText(this, "Search string could not be empty!", Toast.LENGTH_SHORT).show();
         } else {
-            hideKeyboard();
             if (checkConnectivity()) {
-                String query = GoogleBooksUtils.getQuery(this, mBinding.editQuery.getText().toString());
                 setProgressLoading(true);
-                new VolumesAsyncTask().execute(query);
+                Log.d(TAG, "restartLoader(" + searchPhrase + ")");
+                getSupportLoaderManager().restartLoader(VOLUME_ASYNC_LOADER,
+                        getSearchArgs(searchPhrase), this);
             }
         }
     }
 
-    private class VolumesAsyncTask extends AsyncTask<String, Void, List<VolumeInfo>> {
-
-        @Override
-        protected List<VolumeInfo> doInBackground(String... query) {
-            if ((query != null) && (query.length > 0)) {
-                try {
-                    return GoogleBooksUtils.processHttpRequest(GoogleBooksUtils.createUrl(query[0]),
-                            GoogleBooksUtils.getInputStreamVolumeListProcessor());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    @Override
+    public Loader<List<VolumeInfo>> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case VOLUME_ASYNC_LOADER: {
+                // Extract search phrase
+                String phrase = getSearchPhrase(args);
+                Log.d(TAG, "new VolumesLoader(" + phrase + ")");
+                return new VolumesLoader(this, phrase);
             }
-
-            return null;
+            default: return null;
         }
+    }
 
-        @Override
-        protected void onPostExecute(List<VolumeInfo> list) {
-            setProgressLoading(false);
-            mAdapter.clear();
-            if (list != null) {
-                if (list.size() == 0) {
-                    mBinding.textSearchResult.setText(R.string.search_empty);
-                } else {
-                    mAdapter.addAll(list);
-                }
-            } else {
-                mBinding.textSearchResult.setText(getString(R.string.search_error));
-            }
-            mAdapter.notifyDataSetChanged();
+    @Override
+    public void onLoadFinished(Loader<List<VolumeInfo>> loader, List<VolumeInfo> data) {
+        mAdapter.clear();
+        if (data != null) {
+            mAdapter.addAll(data);
+            Log.d(TAG, "onLoadFinished=" + data.size());
+        } else {
+            Log.d(TAG, "onLoadFinished=null");
         }
+        mAdapter.notifyDataSetChanged();
+        setProgressLoading(false);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<VolumeInfo>> loader) {
+        Log.d(TAG, "onLoaderReset");
+        // Loader reset, so we can clear out our existing data.
+        mAdapter.clear();
+        mAdapter.notifyDataSetChanged();
+        setProgressLoading(false);
+    }
+
+    private String getSearchPhrase(Bundle args) {
+        if (args != null) {
+            return args.getString(ARG_BUNDLE_SEARCH, "");
+        }
+        return "";
+    }
+
+    private Bundle getSearchArgs(String searchPhrase) {
+        Bundle args = new Bundle();
+        args.putString(ARG_BUNDLE_SEARCH, searchPhrase);
+        return args;
     }
 
     private void setProgressLoading(boolean isLoading) {
         if (isLoading) {
-            mBinding.progressSearch.show();
-            mBinding.textSearchResult.setVisibility(View.GONE);
+            mBinding.progressSearch.setVisibility(View.VISIBLE);
         } else {
-            mBinding.progressSearch.hide();
-            mBinding.textSearchResult.setVisibility(View.VISIBLE);
+            mBinding.progressSearch.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -188,5 +213,6 @@ public class MainActivity extends AppCompatActivity {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
+        mBinding.focusGainer.requestFocus();
     }
 }

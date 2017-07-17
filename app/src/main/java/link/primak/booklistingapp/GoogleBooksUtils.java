@@ -140,7 +140,10 @@ class GoogleBooksUtils {
                 JSONObject root = new JSONObject(jsonString);
                 JSONArray items = root.getJSONArray("items");
                 for (int i = 0; i < items.length(); i++) {
-                    JSONObject volumeInfo = items.getJSONObject(i).getJSONObject("volumeInfo");
+                    JSONObject item = items.getJSONObject(i);
+                    JSONObject volumeInfo = item.getJSONObject("volumeInfo");
+
+                    String link = volumeInfo.getString("canonicalVolumeLink");
 
                     // Authors could not exists, show publisher instead
                     StringBuilder authorBuider = new StringBuilder();
@@ -156,7 +159,7 @@ class GoogleBooksUtils {
                     } else if (volumeInfo.has("publisher")) {
                         authorBuider.append(volumeInfo.getString("publisher"));
                     }
-                    list.add(new VolumeInfo(authorBuider.toString(), volumeInfo.getString("title")));
+                    list.add(new VolumeInfo(authorBuider.toString(), volumeInfo.getString("title"), link));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
