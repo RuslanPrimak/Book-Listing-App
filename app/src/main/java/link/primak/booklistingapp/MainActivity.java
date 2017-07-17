@@ -40,52 +40,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     // TODO: 13-Jul-17 Book Listing project rubric: https://review.udacity.com/#!/rubrics/164/view
 
-    // TODO: 13-Jul-17 Text Wrapping: Information displayed on list items is not crowded.
-    /** TODO: 13-Jul-17 Rotation: Upon device rotation - The layout remains scrollable.;
-     *  The app should save state and restore the list back to the previously scrolled position.;
-     *  The UI should adjust properly so that all contents of each list item is still visible and not truncated.;
-     *  The Search button should still remain visible on the screen after the device is rotated.
-     */
-
-    /** TODO: 13-Jul-17 API Call: The user can enter a word or phrase to serve as a search query.
-     *  The app fetches book data related to the query via an HTTP request from the Google Books API,
-     *  using a class such as HttpUriRequest or HttpURLConnection.
-     */
-
-    /** TODO: 14-Jul-17
-     *  Perform a search for quilting:
-     *  GET https://www.googleapis.com/books/v1/volumes?q=quilting
-     *  https://developers.google.com/books/docs/v1/reference/volumes/list
-     *  https://developers.google.com/books/docs/v1/reference/volumes
-     */
-
-    /** TODO: 14-Jul-17
-     *  Get information on volume s1gVAAAAYAAJ:
-     *  GET https://www.googleapis.com/books/v1/volumes/s1gVAAAAYAAJ
-     */
-
-    /** TODO: 13-Jul-17
-     * Bookshelf - create separate activity for managing Bookshelf
-     * A bookshelf is a collection of volumes
-     * Is it possible to request list of bookshelves?
-     * Note: Creating and deleting bookshelves as well as modifying privacy settings on bookshelves
-     * can currently only be done through the Google Books site.
-     */
-
-    /*
-     TODO: 18-Jul-17 доработать поиск рускоязычных слов
-     */
-
     /*
      TODO: 18-Jul-17 доработать загрузку картинок
      */
 
-
-    private ActivityMainBinding mBinding;
-    private VolumesAdapter mAdapter;
     private static final String TAG = "MainActivityTag";
     private static final int VOLUME_ASYNC_LOADER = 0;
     private static final String ARG_BUNDLE_SEARCH = "ARG_BUNDLE_SEARCH";
+    private static final String ARG_BUNDLE_POSITION = "ARG_BUNDLE_POSITION";
+
+    private ActivityMainBinding mBinding;
+    private VolumesAdapter mAdapter;
+    private int mListFirstVisiblePosition;
 
     /**
      *
@@ -94,6 +60,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mListFirstVisiblePosition = savedInstanceState.getInt(ARG_BUNDLE_POSITION, 0);
+        }
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mBinding.listView.setEmptyView(mBinding.textSearchResult);
@@ -118,21 +88,28 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         hideKeyboard();
         if (checkConnectivity()) {
-            Log.d(TAG, "initLoader(null)");
+            //Log.d(TAG, "initLoader(null)");
             getSupportLoaderManager().initLoader(VOLUME_ASYNC_LOADER, null, this);
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(ARG_BUNDLE_POSITION, mBinding.listView.getFirstVisiblePosition());
+    }
+
     public void onSearchButtonClick(View view) {
+        mListFirstVisiblePosition = 0;
         hideKeyboard();
-        Log.d(TAG, "onSearchButtonClick");
+        //Log.d(TAG, "onSearchButtonClick");
         String searchPhrase = mBinding.editQuery.getText().toString();
         if (TextUtils.isEmpty(searchPhrase)) {
             Toast.makeText(this, "Search string could not be empty!", Toast.LENGTH_SHORT).show();
         } else {
             if (checkConnectivity()) {
                 setProgressLoading(true);
-                Log.d(TAG, "restartLoader(" + searchPhrase + ")");
+                //Log.d(TAG, "restartLoader(" + searchPhrase + ")");
                 getSupportLoaderManager().restartLoader(VOLUME_ASYNC_LOADER,
                         getSearchArgs(searchPhrase), this);
             }
@@ -145,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             case VOLUME_ASYNC_LOADER: {
                 // Extract search phrase
                 String phrase = getSearchPhrase(args);
-                Log.d(TAG, "new VolumesLoader(" + phrase + ")");
+                //Log.d(TAG, "new VolumesLoader(" + phrase + ")");
                 return new VolumesLoader(this, phrase);
             }
             default: return null;
@@ -157,17 +134,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mAdapter.clear();
         if (data != null) {
             mAdapter.addAll(data);
-            Log.d(TAG, "onLoadFinished=" + data.size());
-        } else {
+            //Log.d(TAG, "onLoadFinished=" + data.size());
+        } /*else {
             Log.d(TAG, "onLoadFinished=null");
-        }
+        }*/
         mAdapter.notifyDataSetChanged();
         setProgressLoading(false);
+        if (mListFirstVisiblePosition > 0)
+            mBinding.listView.smoothScrollToPosition(mListFirstVisiblePosition);
     }
 
     @Override
     public void onLoaderReset(Loader<List<VolumeInfo>> loader) {
-        Log.d(TAG, "onLoaderReset");
+        //Log.d(TAG, "onLoaderReset");
         // Loader reset, so we can clear out our existing data.
         mAdapter.clear();
         mAdapter.notifyDataSetChanged();

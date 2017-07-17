@@ -31,12 +31,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -44,8 +45,8 @@ import static java.net.HttpURLConnection.HTTP_OK;
 class GoogleBooksUtils {
     private static final String TAG = "GoogleBooksUtils";
 
-    static String getQuery(Context context, String keywords) {
-        return context.getString(R.string.search_volumes_query, keywords);
+    static String getQuery(Context context, String keywords) throws UnsupportedEncodingException {
+        return context.getString(R.string.search_volumes_query, URLEncoder.encode(keywords, "UTF-8"));
     }
 
     static URL createUrl(String stringUrl) {

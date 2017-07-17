@@ -24,7 +24,10 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
+
+import static java.net.Proxy.Type.HTTP;
 
 class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
     private static final String TAG = "VolumesLoader";
@@ -36,13 +39,13 @@ class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
         super(context);
         mSearchPhrase = searchPhrase;
         mContext = context;
-        Log.d(TAG, "VolumesLoader(" + searchPhrase + ")");
+        //Log.d(TAG, "VolumesLoader(" + searchPhrase + ")");
     }
 
     @Override
     protected void onStartLoading() {
         if (mOldData != null) {
-            Log.d(TAG, "onStartLoading(mOldData)");
+            //Log.d(TAG, "onStartLoading(mOldData)");
             deliverResult(mOldData);
         }
 
@@ -52,26 +55,27 @@ class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
     @Override
     public List<VolumeInfo> loadInBackground() {
         if (TextUtils.isEmpty(mSearchPhrase)) {
-            Log.d(TAG, "loadInBackground(null 1)");
+            //Log.d(TAG, "loadInBackground(null 1)");
             return null;
         }
 
-        String query = GoogleBooksUtils.getQuery(mContext, mSearchPhrase);
         try {
-            Log.d(TAG, "loadInBackground(" + mSearchPhrase + ")");
-            return GoogleBooksUtils.processHttpRequest(GoogleBooksUtils.createUrl(query),
+            //Log.d(TAG, "loadInBackground(" + mSearchPhrase + ")");
+            String query = GoogleBooksUtils.getQuery(mContext, mSearchPhrase);
+            return GoogleBooksUtils.processHttpRequest(
+                    GoogleBooksUtils.createUrl(query),
                     GoogleBooksUtils.getInputStreamVolumeListProcessor());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        Log.d(TAG, "loadInBackground(null 2)");
+        //Log.d(TAG, "loadInBackground(null 2)");
         return null;
     }
 
     @Override
     public void deliverResult(List<VolumeInfo> data) {
-        Log.d(TAG, "deliverResult(" + (data == null ? "null" : data.size()) + ")");
+        //Log.d(TAG, "deliverResult(" + (data == null ? "null" : data.size()) + ")");
         mOldData = data;
         super.deliverResult(data);
     }
