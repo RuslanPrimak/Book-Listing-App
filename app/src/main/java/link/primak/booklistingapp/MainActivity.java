@@ -6,7 +6,6 @@ import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -16,10 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.List;
 
 import link.primak.booklistingapp.databinding.ActivityMainBinding;
@@ -44,8 +41,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
      TODO: 18-Jul-17 доработать фоновую загрузку картинок отдельным Loader'oм
      */
 
+    /*
+     TODO: 18-Jul-17 переделать лоадер с использованием ContentProvider
+     */
+
     private static final String TAG = "MainActivityTag";
     private static final int VOLUME_ASYNC_LOADER = 0;
+    private static final int IMAGE_ASYNC_LOADER = 1;
     private static final String ARG_BUNDLE_SEARCH = "ARG_BUNDLE_SEARCH";
     private static final String ARG_BUNDLE_POSITION = "ARG_BUNDLE_POSITION";
 
@@ -75,12 +77,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 // Find the current earthquake that was clicked on
                 VolumeInfo volume = mAdapter.getItem(position);
 
-                // Convert the String URL into a URI object (to pass into the Intent constructor)
-                String link = volume.getLink();
-                if (link != null) {
-
+                if (volume != null) {
+                    // Convert the String URL into a URI object (to pass into the Intent constructor)
                     // Create a new intent to view the earthquake URI
-                    Intent websiteIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                    Intent websiteIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(volume.getLink()));
 
                     // Send the intent to launch a new activity
                     startActivity(websiteIntent);
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         hideKeyboard();
         if (checkConnectivity()) {
-            //Log.d(TAG, "initLoader(null)");
+            Log.d(TAG, "INIT VolumeLoader(null)");
             getSupportLoaderManager().initLoader(VOLUME_ASYNC_LOADER, null, this);
         }
     }
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else {
             if (checkConnectivity()) {
                 setProgressLoading(true);
-                //Log.d(TAG, "restartLoader(" + searchPhrase + ")");
+                Log.d(TAG, "RESTART VolumeLoader(" + searchPhrase + ")");
                 getSupportLoaderManager().restartLoader(VOLUME_ASYNC_LOADER,
                         getSearchArgs(searchPhrase), this);
             }
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             case VOLUME_ASYNC_LOADER: {
                 // Extract search phrase
                 String phrase = getSearchPhrase(args);
-                //Log.d(TAG, "new VolumesLoader(" + phrase + ")");
+                Log.d(TAG, "NEW VolumeLoader(" + phrase + ")");
                 return new VolumesLoader(this, phrase);
             }
             default: return null;
@@ -150,9 +150,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void onLoaderReset(Loader<List<VolumeInfo>> loader) {
         //Log.d(TAG, "onLoaderReset");
         // Loader reset, so we can clear out our existing data.
-        mAdapter.clear();
-        mAdapter.notifyDataSetChanged();
-        setProgressLoading(false);
+        if (loader instanceof VolumesLoader) {
+            mAdapter.clear();
+            mAdapter.notifyDataSetChanged();
+            setProgressLoading(false);
+        }
     }
 
     private String getSearchPhrase(Bundle args) {
