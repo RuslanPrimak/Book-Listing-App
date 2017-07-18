@@ -23,31 +23,8 @@ import link.primak.booklistingapp.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<VolumeInfo>> {
 
-    //https://developers.google.com/books/docs/v1/getting_started#intro
-
-    /** TODO: 13-Jul-17 For this project, you will be creating a book listing app.
-     * A user should be able to enter a keyword, press the search button,
-     * and recieve a list of published books which relate to that keyword.
-     */
-
-    /** TODO: 13-Jul-17 We suggest first exploring the API and learning what information it returns
-     *  given a particular query. An example query that we found useful was:
-     *  https://www.googleapis.com/books/v1/volumes?q=android&maxResults=1
-     */
-
-    // TODO: 13-Jul-17 Book Listing project rubric: https://review.udacity.com/#!/rubrics/164/view
-
-    /*
-     TODO: 18-Jul-17 доработать фоновую загрузку картинок отдельным Loader'oм
-     */
-
-    /*
-     TODO: 18-Jul-17 переделать лоадер с использованием ContentProvider
-     */
-
     private static final String TAG = "MainActivityTag";
     private static final int VOLUME_ASYNC_LOADER = 0;
-    private static final int IMAGE_ASYNC_LOADER = 1;
     private static final String ARG_BUNDLE_SEARCH = "ARG_BUNDLE_SEARCH";
     private static final String ARG_BUNDLE_POSITION = "ARG_BUNDLE_POSITION";
 
@@ -90,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         hideKeyboard();
         if (checkConnectivity()) {
-            Log.d(TAG, "INIT VolumeLoader(null)");
+            //Log.d(TAG, "INIT VolumeLoader(null)");
             getSupportLoaderManager().initLoader(VOLUME_ASYNC_LOADER, null, this);
         }
     }
@@ -111,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else {
             if (checkConnectivity()) {
                 setProgressLoading(true);
-                Log.d(TAG, "RESTART VolumeLoader(" + searchPhrase + ")");
+                //Log.d(TAG, "RESTART VolumeLoader(" + searchPhrase + ")");
                 getSupportLoaderManager().restartLoader(VOLUME_ASYNC_LOADER,
                         getSearchArgs(searchPhrase), this);
             }
@@ -124,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             case VOLUME_ASYNC_LOADER: {
                 // Extract search phrase
                 String phrase = getSearchPhrase(args);
-                Log.d(TAG, "NEW VolumeLoader(" + phrase + ")");
+                //Log.d(TAG, "NEW VolumeLoader(" + phrase + ")");
                 return new VolumesLoader(this, phrase);
             }
             default: return null;

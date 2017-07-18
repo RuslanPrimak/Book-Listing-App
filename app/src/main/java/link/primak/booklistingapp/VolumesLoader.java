@@ -19,21 +19,16 @@
 package link.primak.booklistingapp;
 
 import android.content.Context;
-import android.os.FileObserver;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.List;
-
-import static java.net.Proxy.Type.HTTP;
 
 class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
     private static final String TAG = "VolumesLoader";
     private String mSearchPhrase;
-    private List<VolumeInfo> mOldData;
+    private List<VolumeInfo> mData;
     private Context mContext;
 
     VolumesLoader(Context context, String searchPhrase) {
@@ -45,12 +40,14 @@ class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
 
     @Override
     protected void onStartLoading() {
-        if (mOldData != null) {
-            //Log.d(TAG, "onStartLoading(mOldData)");
-            deliverResult(mOldData);
+        if (mData != null) {
+            //Log.d(TAG, "onStartLoading(mData)");
+            deliverResult(mData);
         }
 
-        forceLoad();
+        //if (takeContentChanged() || mData == null) {
+            forceLoad();
+        //}
     }
 
     @Override
@@ -77,7 +74,7 @@ class VolumesLoader extends AsyncTaskLoader<List<VolumeInfo>> {
     @Override
     public void deliverResult(List<VolumeInfo> data) {
         //Log.d(TAG, "deliverResult(" + (data == null ? "null" : data.size()) + ")");
-        mOldData = data;
+        mData = data;
         super.deliverResult(data);
     }
 }
