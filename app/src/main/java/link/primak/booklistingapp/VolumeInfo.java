@@ -18,39 +18,46 @@
 
 package link.primak.booklistingapp;
 
+import android.graphics.Bitmap;
+
 public class VolumeInfo {
     private String author;
     private String title;
     private String link;
+    private String id;
+    private String smallThumbnail;
+    private Bitmap image;
 
-    public VolumeInfo(String author, String title, String link) {
-        this.author = author;
-        this.title = title;
-        this.link = link;
+    private VolumeInfo() {
+
     }
 
     public String getAuthor() {
         return author;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
     public String getTitle() {
         return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getLink() {
         return link;
     }
 
-    public void setLink(String link) {
-        this.link = link;
+    public String getId() {
+        return id;
+    }
+
+    public String getSmallThumbnail() {
+        return smallThumbnail;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
     }
 
     @Override
@@ -60,5 +67,62 @@ public class VolumeInfo {
                 ", title='" + title + '\'' +
                 ", link='" + link + '\'' +
                 '}';
+    }
+
+    public static class Builder {
+        private String author;
+        private String title;
+        private String link;
+        private String id;
+        private String smallThumbnail;
+
+        public Builder() {
+
+        }
+
+        public Builder reset() {
+            author = null;
+            title = null;
+            link = null;
+            id = null;
+            smallThumbnail = null;
+            return this;
+        }
+
+        public Builder setAuthor(String author) {
+            this.author = author;
+            return this;
+        }
+
+        public Builder setTitle(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder setLink(String link) {
+            this.link = link;
+            return this;
+        }
+
+        public Builder setId(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder setSmallThumbnail(String smallThumbnail) {
+            this.smallThumbnail = smallThumbnail;
+            return this;
+        }
+
+        public VolumeInfo build() {
+            VolumeInfo result = new VolumeInfo();
+            result.author = author;
+            result.title = title;
+            result.link = link;
+            result.id = id;
+            result.smallThumbnail = smallThumbnail;
+
+            return result;
+        }
     }
 }

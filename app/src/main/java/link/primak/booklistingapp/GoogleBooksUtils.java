@@ -19,6 +19,8 @@
 package link.primak.booklistingapp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -115,6 +117,16 @@ class GoogleBooksUtils {
         };
     }
 
+    static InputStreamProcessor<Bitmap> getInputStreamBitmapProcessor() {
+        return new InputStreamProcessor<Bitmap>() {
+            @Override
+            public Bitmap processStream(InputStream stream) throws IOException {
+                Bitmap bmp = BitmapFactory.decodeStream(stream);
+                return bmp;
+            }
+        };
+    }
+
     static InputStreamProcessor<List<VolumeInfo>> getInputStreamVolumeListProcessor() {
         return new InputStreamProcessor<List<VolumeInfo>>() {
             @Override
@@ -129,13 +141,23 @@ class GoogleBooksUtils {
                         line = reader.readLine();
                     }
                 }
-                return parseJsonVolumes(output.toString());
+
+                // Load thumbnails
+                List<VolumeInfo> volumes = parseJsonVolumes(output.toString());
+                for (VolumeInfo volume : volumes) {
+                    volume.setImage(processHttpRequest(
+                            createUrl(volume.getSmallThumbnail()),
+                            getInputStreamBitmapProcessor()));
+                }
+
+                return volumes;
             }
         };
     }
 
     static List<VolumeInfo> parseJsonVolumes(String jsonString) {
         List<VolumeInfo> list = new ArrayList<>();
+        VolumeInfo.Builder builder = new VolumeInfo.Builder();
         if (!TextUtils.isEmpty(jsonString)) {
             try {
                 JSONObject root = new JSONObject(jsonString);
@@ -160,7 +182,17 @@ class GoogleBooksUtils {
                     } else if (volumeInfo.has("publisher")) {
                         authorBuider.append(volumeInfo.getString("publisher"));
                     }
-                    list.add(new VolumeInfo(authorBuider.toString(), volumeInfo.getString("title"), link));
+
+                    JSONObject imageLinks = volumeInfo.getJSONObject("imageLinks");
+
+                    list.add(builder.reset()
+                            .setId(item.getString("id"))
+                            .setAuthor(authorBuider.toString())
+                            .setTitle(volumeInfo.getString("title"))
+                            .setLink(volumeInfo.getString("canonicalVolumeLink"))
+                            .setSmallThumbnail(imageLinks.getString("smallThumbnail"))
+                            .build()
+                    );
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

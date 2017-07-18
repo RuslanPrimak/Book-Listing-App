@@ -6,4 +6,5 @@
     <string name="no_internet_connection">No internet connection</string>
     <string name="search_error">Error is occurred</string>
     <string name="search_empty">There are no volumes</string>
+    <string name="thumbnail">Thumbnail</string>
 </resources>

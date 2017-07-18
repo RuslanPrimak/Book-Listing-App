@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     // TODO: 13-Jul-17 Book Listing project rubric: https://review.udacity.com/#!/rubrics/164/view
 
     /*
-     TODO: 18-Jul-17 доработать загрузку картинок
+     TODO: 18-Jul-17 доработать фоновую загрузку картинок отдельным Loader'oм
      */
 
     private static final String TAG = "MainActivityTag";
@@ -76,13 +76,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 VolumeInfo volume = mAdapter.getItem(position);
 
                 // Convert the String URL into a URI object (to pass into the Intent constructor)
-                Uri uri = Uri.parse(volume.getLink());
+                String link = volume.getLink();
+                if (link != null) {
 
-                // Create a new intent to view the earthquake URI
-                Intent websiteIntent = new Intent(Intent.ACTION_VIEW, uri);
+                    // Create a new intent to view the earthquake URI
+                    Intent websiteIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
 
-                // Send the intent to launch a new activity
-                startActivity(websiteIntent);
+                    // Send the intent to launch a new activity
+                    startActivity(websiteIntent);
+                }
             }
         });
 

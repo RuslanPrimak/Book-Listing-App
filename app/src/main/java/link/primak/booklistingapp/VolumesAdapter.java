@@ -49,6 +49,7 @@ public class VolumesAdapter extends ArrayAdapter<VolumeInfo> {
 
         VolumeInfo item = getItem(position);
         if (item != null) {
+            itemBinding.thumbnail.setImageBitmap(item.getImage());
             itemBinding.textAuthor.setText(item.getAuthor());
             itemBinding.textTitle.setText(item.getTitle());
         } else {
